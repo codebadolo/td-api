@@ -9,18 +9,26 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginView(APIView):
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        user = authenticate(email=email, password=password)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def user_login(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+    user = authenticate(request, email=email, password=password)
 
-        if user:
-            login(request, user)
-            return Response({'message': 'Login successful', 'user': user.email})
-        return Response({'error': 'Invalid credentials'}, status=401)
+    if user:
+        login(request, user)
+        token, _ = Token.objects.get_or_create(user=user)  # For TokenAuth
+        return Response({
+            'message': 'Login successful',
+            'user': user.email,
+            'token': token.key
+        })
+    return Response({'error': 'Invalid credentials'}, status=401)
 
 
 @csrf_exempt

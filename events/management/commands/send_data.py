@@ -3,17 +3,12 @@ import random
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from faker import Faker
-from io import BytesIO
 from django_seed import Seed
 from django.contrib.auth.models import User
 from events.models import Event, Location, Category
 from social.models import Comment , Like
 from users.models import UserProfile
-from django.contrib.auth import get_user_model  # Use this to get the correct User model
-from users.models import UserProfile
-import requests
-User = get_user_model()  # This ensures compatibility with custom user models
-fake = Faker()
+
 fake = Faker()
 
 class Command(BaseCommand):
@@ -22,7 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Seeding data...'))
 
-         # Create 10 users
+       # Create 10 users
         users = []
         for _ in range(10):
             user = User.objects.create_user(
@@ -35,24 +30,20 @@ class Command(BaseCommand):
 
         # Create user profiles with fake avatars
         for user in users:
+            if not isinstance(user, User):
+                self.stdout.write(self.style.ERROR(f'Invalid user: {user}'))
+                continue
             profile = UserProfile.objects.create(
                 user=user,
                 bio=fake.text(max_nb_chars=200),
             )
             # Generate a fake avatar image
-            image_url = fake.image_url()
-            try:
-                response = requests.get(image_url)
-                response.raise_for_status()  # Check for HTTP errors
-                image_name = f'{user.username}_avatar.jpg'
-                profile.avatar.save(image_name, File(BytesIO(response.content)), save=True)
-            except requests.RequestException as e:
-                self.stdout.write(self.style.ERROR(f'Failed to download image: {e}'))
-                continue
+            with open(fake.image_url(), 'rb') as f:
+                profile.avatar.save(f'{user.username}_avatar.jpg', File(f), save=True)
+
+
         # Create 100 events
-           # Create 10 locations
         locations = [Location.objects.create(name=fake.city()) for _ in range(10)]
-        self.stdout.write(self.style.SUCCESS('Created locations'))
         categories = [Category.objects.create(name=fake.word()) for _ in range(5)]
         events = []
         for _ in range(100):

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django.contrib.gis',
      'rest_framework',
+        'rest_framework.authtoken',  # Add this line
       "corsheaders",
     'social',
     'users',
@@ -67,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
 
     "http://localhost:3000",
@@ -90,6 +92,11 @@ TEMPLATES = [
         },
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Number of events per page
+}
 
 WSGI_APPLICATION = 'core.wsgi.application'
 

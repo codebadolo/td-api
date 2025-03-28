@@ -1,5 +1,7 @@
 # events/models.py
-
+from django.contrib.gis.db import models
+from django.contrib.gis.db import models
+from django.core.validators import FileExtensionValidator
 from django.contrib.gis.db import models
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -11,6 +13,21 @@ class Location(models.Model):
     coordinates = models.PointField(blank = True , null = True)
     capacity = models.PositiveIntegerField(blank = True , null = True)
 
+
+
+
+class EventImage(models.Model):
+    event = models.ForeignKey(
+        'Event', 
+        on_delete=models.CASCADE, 
+        related_name='event_images'  # Use a unique related_name
+    )
+    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
+
+    def __str__(self):
+        return f"Image for {self.event.title}"
+
+    
 class Event(models.Model):
     EVENT_STATUS = (
         ('draft', 'Draft'),
@@ -19,6 +36,7 @@ class Event(models.Model):
     )
     
     title = models.CharField(max_length=200)
+    
     description = models.TextField()
     date = models.DateTimeField()
     location = models.ForeignKey(Location, on_delete=models.PROTECT  )
@@ -35,3 +53,6 @@ class Event(models.Model):
     
     def __str__(self):
         return self.title
+    
+    
+    
