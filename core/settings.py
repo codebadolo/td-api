@@ -31,22 +31,46 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+ "unfold",  # before django.contrib.admin
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.inlines",  # optional, if special inlines are needed
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+    "unfold.contrib.guardian",  # optional, if django-guardian package is used
+    "unfold.contrib.simple_history",  # optional, if django-simple-history package is used
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_yasg',
+    'django.contrib.gis',
+     'rest_framework',
+      "corsheaders",
+    'social',
+    'users',
+    'inbox',
+    'recommandations',
+  
+    'events'
+    
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+CORS_ALLOWED_ORIGINS = [
+
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -73,12 +97,22 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
+'''DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+'''
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.spatialite',  # Use SpatiaLite backend
+        'NAME': BASE_DIR / 'db.sqlite3',  # Path to SQLite database file
+    }
+}
+
+SPATIALITE_LIBRARY_PATH = 'mod_spatialite'  # Path to SpatiaLite library
 
 
 # Password validation
@@ -114,6 +148,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
+AUTH_USER_MODEL = 'users.User'  # Replace 'users' with your app name
 
 STATIC_URL = 'static/'
 
@@ -121,3 +156,130 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+UNFOLD = {
+    "SITE_TITLE": "Event Manager Admin",
+    "SITE_HEADER": "Event Management Dashboard",
+    "SITE_SUBHEADER": "Manage Events, Users, and Social Interactions",
+    "SITE_URL": "/",
+    "SITE_ICON": {
+        "light": lambda request: static("icons/icon-light.svg"),
+        "dark": lambda request: static("icons/icon-dark.svg"),
+    },
+    "SITE_LOGO": {
+        "light": lambda request: static("logos/logo-light.svg"),
+        "dark": lambda request: static("logos/logo-dark.svg"),
+    },
+    "SITE_SYMBOL": "event",
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "sizes": "32x32",
+            "type": "image/svg+xml",
+            "href": lambda request: static("icons/favicon.svg"),
+        },
+    ],
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": False,
+   # "ENVIRONMENT": "admin_dashboard.environment_callback",
+    #"ENVIRONMENT_TITLE_PREFIX": "admin_dashboard.environment_title_prefix_callback",
+   # "DASHBOARD_CALLBACK": "admin_dashboard.dashboard_callback",
+    "THEME": "dark",  # Force dark theme
+    "LOGIN": {
+        "image": lambda request: static("images/login-bg.jpg"),
+        "redirect_after": lambda request: reverse_lazy("admin:events_event_changelist"),
+    },
+    "STYLES": [
+        lambda request: static("css/admin.css"),
+    ],
+    "SCRIPTS": [
+        lambda request: static("js/admin.js"),
+    ],
+    "BORDER_RADIUS": "8px",
+    "COLORS": {
+        "primary": {
+            "50": "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
+        },
+        "font": {
+            "subtle-light": "var(--color-base-500)",
+            "subtle-dark": "var(--color-base-400)",
+            "default-light": "var(--color-base-600)",
+            "default-dark": "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark": "var(--color-base-100)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Events"),
+                "icon": "calendar_today",
+                "items": [
+                    {
+                        "title": _("All Events"),
+                        "link": reverse_lazy("admin:events_event_changelist"),
+                    },
+                    {
+                        "title": _("Locations"),
+                        "link": reverse_lazy("admin:events_location_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Social"),
+                "icon": "forum",
+                "items": [
+                    {
+                        "title": _("Comments"),
+                        "link": reverse_lazy("admin:social_comment_changelist"),
+                    },
+                    {
+                        "title": _("Likes"),
+                        "link": reverse_lazy("admin:social_like_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Users"),
+                "icon": "people",
+                "items": [
+                    {
+                        "title": _("All Users"),
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                    {
+                        "title": _("Profiles"),
+                        "link": reverse_lazy("admin:users_userprofile_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+    "TABS": [
+        {
+            "models": ["events.event"],
+            "items": [
+                {
+                    "title": _("Event Statistics"),
+                    "link": reverse_lazy("admin:events_event_changelist"),
+                },
+            ],
+        },
+    ],
+}
