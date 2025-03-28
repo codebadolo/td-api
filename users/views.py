@@ -3,20 +3,25 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
 
-@csrf_exempt
-def user_login(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(request, email=email, password=password)
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = authenticate(email=email, password=password)
 
-        if user is not None:
+        if user:
             login(request, user)
-            return JsonResponse({'message': 'Login successful', 'user': user.email})
-        else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=401)
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+            return Response({'message': 'Login successful', 'user': user.email})
+        return Response({'error': 'Invalid credentials'}, status=401)
+
 
 @csrf_exempt
 def user_signup(request):
